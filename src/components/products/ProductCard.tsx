@@ -17,6 +17,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { FC } from 'react';
 
 /**
@@ -38,6 +39,13 @@ export interface Product {
     name: string;
     slug: string;
   } | null;
+  images?: Array<{
+    id: string;
+    url: string;
+    altText: string | null;
+    sortOrder: number;
+    isPrimary: boolean;
+  }>;
 }
 
 export interface ProductCardProps {
@@ -84,6 +92,10 @@ export const ProductCard: FC<ProductCardProps> = ({ product, onAddToCart, classN
     }
   };
 
+  // Get primary image or first image
+  const primaryImage = product.images?.find((img) => img.isPrimary) || product.images?.[0];
+  const hasImage = !!primaryImage;
+
   return (
     <article
       className={`group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-lg ${className}`}
@@ -123,25 +135,36 @@ export const ProductCard: FC<ProductCardProps> = ({ product, onAddToCart, classN
         className="relative aspect-square w-full overflow-hidden bg-gray-100"
         aria-label={`View ${product.name} details`}
       >
-        <div className="flex h-full items-center justify-center">
-          {/* Placeholder for product image */}
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 text-gray-400">
-            <svg
-              className="h-24 w-24"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
+        {hasImage ? (
+          <Image
+            src={primaryImage.url}
+            alt={primaryImage.altText || product.name}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform group-hover:scale-105"
+            priority={false}
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            {/* Placeholder for product image */}
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 text-gray-400">
+              <svg
+                className="h-24 w-24"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
           </div>
-        </div>
+        )}
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-black opacity-0 transition-opacity group-hover:opacity-5" />
       </Link>

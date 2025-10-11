@@ -8,6 +8,9 @@ import Credentials from 'next-auth/providers/credentials';
 import { authConfig } from './auth.config';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+
+// Security: Use 12 rounds for bcrypt as per OWASP recommendations
+// const BCRYPT_ROUNDS = 12; // Reserved for future use
 import { z } from 'zod';
 
 // Validation schema for login credentials
