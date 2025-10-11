@@ -99,6 +99,7 @@
    - No raw SQL or string concatenation
 
 2. **Input Validation (Zod)**
+
    ```typescript
    const validatedData = createProductSchema.parse(body);
    ```
@@ -147,6 +148,7 @@
    - Invalid references rejected
 
 4. **Atomic Transactions**
+
    ```typescript
    await prisma.$transaction(async (tx) => {
      await tx.product.create(...);
@@ -411,6 +413,7 @@
    - **Optimization**: Only selects `id`
 
 4. **Product Creation (Transaction)**
+
    ```sql
    BEGIN;
    INSERT INTO products (...) VALUES (...) RETURNING *;
