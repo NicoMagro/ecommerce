@@ -474,7 +474,24 @@ export default function AdminProductsPage() {
       {/* Product Form Modal */}
       {isFormOpen && (
         <ProductForm
-          product={editingProduct || undefined}
+          product={
+            editingProduct
+              ? {
+                  id: editingProduct.id,
+                  name: editingProduct.name,
+                  sku: editingProduct.sku,
+                  description: editingProduct.description || '',
+                  shortDescription: editingProduct.shortDescription || '',
+                  price: editingProduct.price,
+                  compareAtPrice: editingProduct.compareAtPrice,
+                  categoryId: editingProduct.categoryId,
+                  status: editingProduct.status as 'DRAFT' | 'ACTIVE' | 'ARCHIVED',
+                  featured: editingProduct.featured,
+                  seoTitle: editingProduct.seoTitle,
+                  seoDescription: editingProduct.seoDescription,
+                }
+              : undefined
+          }
           onClose={() => {
             setIsFormOpen(false);
             setEditingProduct(null);

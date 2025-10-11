@@ -36,9 +36,6 @@ export async function GET() {
 
     // 2. FETCH CATEGORIES
     const categories = await prisma.category.findMany({
-      where: {
-        deletedAt: null,
-      },
       orderBy: {
         name: 'asc',
       },
