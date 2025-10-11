@@ -302,7 +302,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     });
 
     // 11. LOG SUCCESS (for audit trail)
-    console.info('[PRODUCT_UPDATED]', {
+    console.warn('[PRODUCT_UPDATED]', {
       productId: updatedProduct.id,
       sku: updatedProduct.sku,
       updatedFields: Object.keys(validatedData),
@@ -435,7 +435,7 @@ export async function DELETE(
     });
 
     // 5. LOG SUCCESS (for audit trail)
-    console.info('[PRODUCT_DELETED]', {
+    console.warn('[PRODUCT_DELETED]', {
       productId: validatedParams.id,
       sku: existingProduct.sku,
       userId: session.user.id,

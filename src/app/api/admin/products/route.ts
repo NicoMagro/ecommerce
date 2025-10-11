@@ -382,7 +382,7 @@ export async function POST(request: NextRequest) {
     });
 
     // 9. LOG SUCCESS (for audit trail)
-    console.info('[PRODUCT_CREATED]', {
+    console.warn('[PRODUCT_CREATED]', {
       productId: product.id,
       sku: product.sku,
       userId: session.user.id,

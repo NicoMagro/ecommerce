@@ -75,7 +75,6 @@ export default function ProductsPage() {
 
   const handleAddToCart = (productId: string) => {
     // TODO: Implement add to cart functionality in Sprint 4
-    console.log('Add to cart:', productId);
     alert(`Product ${productId} added to cart! (Cart functionality coming in Sprint 4)`);
   };
 
