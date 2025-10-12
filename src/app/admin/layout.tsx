@@ -80,6 +80,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                     Products
                   </span>
                 </Link>
+                <Link
+                  href="/admin/categories"
+                  className="group relative rounded-lg px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                >
+                  <span className="flex items-center gap-2">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                      />
+                    </svg>
+                    Categories
+                  </span>
+                </Link>
               </nav>
             </div>
             <div className="flex items-center gap-3">
@@ -145,6 +161,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               />
             </svg>
             Products
+          </Link>
+          <Link
+            href="/admin/categories"
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+              />
+            </svg>
+            Categories
           </Link>
         </div>
       </nav>
