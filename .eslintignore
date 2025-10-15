@@ -1,0 +1,24 @@
+# Test files in root
+test-*.js
+test-*.ts
+
+# Build output
+.next
+out
+build
+dist
+
+# Dependencies
+node_modules
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store

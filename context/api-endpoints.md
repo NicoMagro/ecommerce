@@ -845,6 +845,710 @@ GET /api/v1/admin/products?page=1&limit=20&status=ACTIVE&lowStock=true
 
 ---
 
+## Product Image Management Endpoints
+
+### Base URL Pattern
+
+- **Admin endpoints**: `/api/v1/admin/products/[id]/images`
+
+All image management endpoints require **ADMIN** authentication.
+
+---
+
+### 7. Upload Product Images
+
+Uploads one or multiple images for a product to Cloudinary.
+
+**Endpoint**: `POST /api/v1/admin/products/[id]/images`
+
+**Authentication**: Required (ADMIN only)
+
+**Rate Limit**: 20 requests per minute
+
+**URL Parameters**:
+
+- `id`: Product ID (required)
+
+**Request Headers**:
+
+```http
+Content-Type: application/json
+Cookie: authjs.session-token=<session-token>
+```
+
+**Request Body** (Single Image):
+
+```json
+{
+  "image": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
+  "altText": "Premium headphones front view",
+  "isPrimary": true
+}
+```
+
+**Request Body** (Multiple Images):
+
+```json
+{
+  "images": [
+    {
+      "image": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
+      "altText": "Premium headphones front view",
+      "isPrimary": true
+    },
+    {
+      "image": "data:image/png;base64,iVBORw0KGgo...",
+      "altText": "Premium headphones side view",
+      "isPrimary": false
+    },
+    {
+      "image": "data:image/webp;base64,UklGRiQAAABXRUJQ...",
+      "altText": "Premium headphones packaging"
+    }
+  ]
+}
+```
+
+**Validation Rules**:
+
+- `image`: Required, base64 encoded data URL
+- Image format: JPEG, PNG, or WebP only
+- Max file size: 5MB per image
+- Max images per request: 10
+- Max images per product: 10 total
+- `altText`: Optional, max 255 characters, HTML tags stripped
+- `isPrimary`: Optional, boolean (default: false)
+- Only one image can be marked as primary
+
+**Business Rules**:
+
+- First image uploaded becomes primary by default if no primary exists
+- If image is marked as primary, all other images are automatically set to non-primary
+- Images are automatically assigned sequential `sortOrder` values
+- Cloudinary service must be configured (returns 503 if not)
+
+**Success Response** (201 Created) - Single Image:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "img_xyz789",
+    "productId": "prod_abc123",
+    "url": "https://res.cloudinary.com/demo/image/upload/v1234567890/ecommerce/products/prod_abc123/image.jpg",
+    "altText": "Premium headphones front view",
+    "sortOrder": 0,
+    "isPrimary": true,
+    "createdAt": "2024-01-15T10:30:00.000Z"
+  },
+  "message": "Image uploaded successfully",
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+**Success Response** (201 Created) - Multiple Images:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "img_xyz789",
+      "productId": "prod_abc123",
+      "url": "https://res.cloudinary.com/demo/image/upload/v1234567890/ecommerce/products/prod_abc123/image1.jpg",
+      "altText": "Premium headphones front view",
+      "sortOrder": 0,
+      "isPrimary": true,
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    },
+    {
+      "id": "img_xyz790",
+      "productId": "prod_abc123",
+      "url": "https://res.cloudinary.com/demo/image/upload/v1234567890/ecommerce/products/prod_abc123/image2.png",
+      "altText": "Premium headphones side view",
+      "sortOrder": 1,
+      "isPrimary": false,
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    }
+  ],
+  "message": "3 images uploaded successfully",
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00.000Z",
+    "count": 3
+  }
+}
+```
+
+**Error Responses**:
+
+401 Unauthorized:
+
+```json
+{
+  "error": "Unauthorized",
+  "message": "You must be logged in to upload images",
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+403 Forbidden:
+
+```json
+{
+  "error": "Forbidden",
+  "message": "Only admins can upload product images",
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+404 Not Found:
+
+```json
+{
+  "error": "Not Found",
+  "message": "Product not found",
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+400 Validation Error:
+
+```json
+{
+  "error": "Validation Error",
+  "message": "Invalid request data",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "details": [
+    {
+      "path": ["image"],
+      "message": "Image size must not exceed 5MB"
+    },
+    {
+      "path": ["altText"],
+      "message": "Alt text must not exceed 255 characters"
+    }
+  ]
+}
+```
+
+409 Conflict:
+
+```json
+{
+  "error": "Conflict",
+  "message": "Product already has maximum of 10 images",
+  "code": "MAX_IMAGES_EXCEEDED",
+  "statusCode": 409
+}
+```
+
+503 Service Unavailable:
+
+```json
+{
+  "error": "Service Unavailable",
+  "message": "Image upload service is not configured",
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+---
+
+### 8. Get Product Images
+
+Retrieves all images for a specific product.
+
+**Endpoint**: `GET /api/v1/admin/products/[id]/images`
+
+**Authentication**: Required (ADMIN only)
+
+**Rate Limit**: 60 requests per minute
+
+**URL Parameters**:
+
+- `id`: Product ID (required)
+
+**Example Request**:
+
+```http
+GET /api/v1/admin/products/prod_abc123/images
+```
+
+**Success Response** (200 OK):
+
+```json
+{
+  "data": [
+    {
+      "id": "img_xyz789",
+      "productId": "prod_abc123",
+      "url": "https://res.cloudinary.com/demo/image/upload/v1234567890/ecommerce/products/prod_abc123/image1.jpg",
+      "altText": "Premium headphones front view",
+      "sortOrder": 0,
+      "isPrimary": true,
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    },
+    {
+      "id": "img_xyz790",
+      "productId": "prod_abc123",
+      "url": "https://res.cloudinary.com/demo/image/upload/v1234567890/ecommerce/products/prod_abc123/image2.jpg",
+      "altText": "Premium headphones side view",
+      "sortOrder": 1,
+      "isPrimary": false,
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    }
+  ],
+  "meta": {
+    "timestamp": "2024-01-15T11:00:00.000Z",
+    "count": 2
+  }
+}
+```
+
+**Error Responses**:
+
+404 Not Found:
+
+```json
+{
+  "error": "Not Found",
+  "message": "Product not found",
+  "timestamp": "2024-01-15T11:00:00.000Z"
+}
+```
+
+---
+
+### 9. Set Primary Image
+
+Sets a specific image as the primary product image.
+
+**Endpoint**: `PATCH /api/v1/admin/products/[id]/images/primary`
+
+**Authentication**: Required (ADMIN only)
+
+**Rate Limit**: 30 requests per minute
+
+**URL Parameters**:
+
+- `id`: Product ID (required)
+
+**Request Headers**:
+
+```http
+Content-Type: application/json
+Cookie: authjs.session-token=<session-token>
+```
+
+**Request Body**:
+
+```json
+{
+  "imageId": "img_xyz790"
+}
+```
+
+**Validation Rules**:
+
+- `imageId`: Required, valid image ID (CUID format)
+- Image must belong to the specified product
+
+**Business Rules**:
+
+- Previous primary image is automatically set to non-primary
+- Only one image can be primary at a time
+
+**Success Response** (200 OK):
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "img_xyz790",
+    "productId": "prod_abc123",
+    "url": "https://res.cloudinary.com/demo/image/upload/v1234567890/ecommerce/products/prod_abc123/image2.jpg",
+    "altText": "Premium headphones side view",
+    "sortOrder": 1,
+    "isPrimary": true,
+    "createdAt": "2024-01-15T10:30:00.000Z"
+  },
+  "message": "Primary image updated successfully",
+  "meta": {
+    "timestamp": "2024-01-15T12:00:00.000Z",
+    "updatedBy": "user_admin123"
+  }
+}
+```
+
+**Error Responses**:
+
+404 Not Found (Product):
+
+```json
+{
+  "error": "Not Found",
+  "message": "Product not found",
+  "code": "PRODUCT_NOT_FOUND",
+  "statusCode": 404
+}
+```
+
+404 Not Found (Image):
+
+```json
+{
+  "error": "Not Found",
+  "message": "Image not found or does not belong to this product",
+  "code": "IMAGE_NOT_FOUND",
+  "statusCode": 404
+}
+```
+
+400 Validation Error:
+
+```json
+{
+  "error": "Validation Error",
+  "message": "Invalid image ID format",
+  "timestamp": "2024-01-15T12:00:00.000Z",
+  "details": [
+    {
+      "path": ["imageId"],
+      "message": "Invalid image ID format"
+    }
+  ]
+}
+```
+
+---
+
+### 10. Reorder Images
+
+Updates the display order of product images.
+
+**Endpoint**: `PATCH /api/v1/admin/products/[id]/images/reorder`
+
+**Authentication**: Required (ADMIN only)
+
+**Rate Limit**: 30 requests per minute
+
+**URL Parameters**:
+
+- `id`: Product ID (required)
+
+**Request Headers**:
+
+```http
+Content-Type: application/json
+Cookie: authjs.session-token=<session-token>
+```
+
+**Request Body**:
+
+```json
+{
+  "imageOrders": [
+    {
+      "imageId": "img_xyz790",
+      "sortOrder": 0
+    },
+    {
+      "imageId": "img_xyz789",
+      "sortOrder": 1
+    },
+    {
+      "imageId": "img_xyz791",
+      "sortOrder": 2
+    }
+  ]
+}
+```
+
+**Validation Rules**:
+
+- `imageOrders`: Required, array of 1-10 objects
+- `imageId`: Required, valid image ID (CUID format)
+- `sortOrder`: Required, integer 0-999
+- All image IDs must be unique
+- All sort orders must be unique
+- All images must belong to the specified product
+
+**Business Rules**:
+
+- Images are displayed in ascending `sortOrder`
+- Only specified images are reordered
+- Other images maintain their existing order
+
+**Success Response** (200 OK):
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "img_xyz790",
+      "productId": "prod_abc123",
+      "url": "https://res.cloudinary.com/demo/image/upload/v1234567890/ecommerce/products/prod_abc123/image2.jpg",
+      "altText": "Premium headphones side view",
+      "sortOrder": 0,
+      "isPrimary": true,
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    },
+    {
+      "id": "img_xyz789",
+      "productId": "prod_abc123",
+      "url": "https://res.cloudinary.com/demo/image/upload/v1234567890/ecommerce/products/prod_abc123/image1.jpg",
+      "altText": "Premium headphones front view",
+      "sortOrder": 1,
+      "isPrimary": false,
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    }
+  ],
+  "message": "Images reordered successfully",
+  "meta": {
+    "timestamp": "2024-01-15T13:00:00.000Z",
+    "updatedBy": "user_admin123"
+  }
+}
+```
+
+**Error Responses**:
+
+404 Not Found:
+
+```json
+{
+  "error": "Not Found",
+  "message": "Product not found",
+  "statusCode": 404
+}
+```
+
+400 Validation Error:
+
+```json
+{
+  "error": "Validation Error",
+  "message": "Invalid request data",
+  "timestamp": "2024-01-15T13:00:00.000Z",
+  "details": [
+    {
+      "path": ["imageOrders"],
+      "message": "Duplicate image IDs are not allowed"
+    },
+    {
+      "path": ["imageOrders", 0, "sortOrder"],
+      "message": "Sort order must be non-negative"
+    }
+  ]
+}
+```
+
+422 Unprocessable Entity:
+
+```json
+{
+  "error": "Unprocessable Entity",
+  "message": "One or more images do not belong to this product",
+  "code": "INVALID_IMAGE_OWNERSHIP",
+  "statusCode": 422,
+  "details": [
+    {
+      "field": "imageId",
+      "value": "img_xyz999",
+      "message": "Image does not belong to product prod_abc123"
+    }
+  ]
+}
+```
+
+---
+
+### 11. Update Image Metadata
+
+Updates alt text or primary status for a specific image.
+
+**Endpoint**: `PATCH /api/v1/admin/products/[id]/images/[imageId]`
+
+**Authentication**: Required (ADMIN only)
+
+**Rate Limit**: 30 requests per minute
+
+**URL Parameters**:
+
+- `id`: Product ID (required)
+- `imageId`: Image ID (required)
+
+**Request Headers**:
+
+```http
+Content-Type: application/json
+Cookie: authjs.session-token=<session-token>
+```
+
+**Request Body** (all fields optional):
+
+```json
+{
+  "altText": "Updated alt text for accessibility",
+  "isPrimary": true
+}
+```
+
+**Validation Rules**:
+
+- `altText`: Optional, max 255 characters, HTML tags stripped
+- `isPrimary`: Optional, boolean
+- At least one field must be provided
+
+**Business Rules**:
+
+- If `isPrimary` is set to true, previous primary image is set to false
+- Empty `altText` will use product name as fallback
+
+**Success Response** (200 OK):
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "img_xyz789",
+    "productId": "prod_abc123",
+    "url": "https://res.cloudinary.com/demo/image/upload/v1234567890/ecommerce/products/prod_abc123/image1.jpg",
+    "altText": "Updated alt text for accessibility",
+    "sortOrder": 0,
+    "isPrimary": true,
+    "createdAt": "2024-01-15T10:30:00.000Z"
+  },
+  "message": "Image metadata updated successfully",
+  "meta": {
+    "timestamp": "2024-01-15T14:00:00.000Z",
+    "updatedBy": "user_admin123"
+  }
+}
+```
+
+**Error Responses**:
+
+404 Not Found:
+
+```json
+{
+  "error": "Not Found",
+  "message": "Image not found",
+  "statusCode": 404
+}
+```
+
+400 Validation Error:
+
+```json
+{
+  "error": "Validation Error",
+  "message": "At least one field (altText or isPrimary) must be provided",
+  "statusCode": 400
+}
+```
+
+---
+
+### 12. Delete Product Image
+
+Deletes a specific product image from Cloudinary and database.
+
+**Endpoint**: `DELETE /api/v1/admin/products/[id]/images/[imageId]`
+
+**Authentication**: Required (ADMIN only)
+
+**Rate Limit**: 20 requests per minute
+
+**URL Parameters**:
+
+- `id`: Product ID (required)
+- `imageId`: Image ID (required)
+
+**Request Headers**:
+
+```http
+Cookie: authjs.session-token=<session-token>
+```
+
+**Business Rules**:
+
+- Image is deleted from both Cloudinary and database
+- If deleted image was primary, the first remaining image becomes primary
+- Cloudinary deletion failure doesn't prevent database deletion (logged but continues)
+- Cannot delete if it's the only product image (business rule, optional)
+
+**Success Response** (200 OK):
+
+```json
+{
+  "success": true,
+  "message": "Image deleted successfully",
+  "meta": {
+    "timestamp": "2024-01-15T15:00:00.000Z"
+  }
+}
+```
+
+**Error Responses**:
+
+401 Unauthorized:
+
+```json
+{
+  "error": "Unauthorized",
+  "message": "You must be logged in to delete images",
+  "timestamp": "2024-01-15T15:00:00.000Z"
+}
+```
+
+403 Forbidden:
+
+```json
+{
+  "error": "Forbidden",
+  "message": "Only admins can delete product images",
+  "timestamp": "2024-01-15T15:00:00.000Z"
+}
+```
+
+404 Not Found (Product):
+
+```json
+{
+  "error": "Not Found",
+  "message": "Product not found",
+  "timestamp": "2024-01-15T15:00:00.000Z"
+}
+```
+
+404 Not Found (Image):
+
+```json
+{
+  "error": "Not Found",
+  "message": "Image not found",
+  "timestamp": "2024-01-15T15:00:00.000Z"
+}
+```
+
+422 Unprocessable Entity:
+
+```json
+{
+  "error": "Unprocessable Entity",
+  "message": "Cannot delete the only product image",
+  "code": "MINIMUM_IMAGES_REQUIRED",
+  "statusCode": 422
+}
+```
+
+---
+
 ## Pagination & Filtering
 
 ### Pagination Standards
