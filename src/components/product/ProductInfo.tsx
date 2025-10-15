@@ -216,7 +216,7 @@ export function ProductInfo({ product, className = '', onAddToCart }: ProductInf
                 max={product.inventory.quantity}
                 value={quantity}
                 onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
-                className="w-16 border-l border-r border-gray-300 py-2 text-center focus:outline-none"
+                className="w-16 border-l border-r border-gray-300 py-2 text-center text-gray-900 focus:outline-none"
                 aria-label="Product quantity"
               />
               <button

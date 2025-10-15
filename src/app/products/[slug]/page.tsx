@@ -20,9 +20,9 @@ import type { ProductDetail } from '@/types/product';
  * Page props interface
  */
 interface ProductDetailPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 /**
@@ -60,7 +60,8 @@ async function fetchProductBySlug(slug: string): Promise<ProductDetail | null> {
  * @returns Metadata object for the page
  */
 export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
-  const product = await fetchProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await fetchProductBySlug(slug);
 
   if (!product) {
     return {
@@ -86,7 +87,7 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
       description,
       type: 'website',
       images: imageUrl ? [{ url: imageUrl, alt: product.name }] : [],
-      url: `${process.env.NEXT_PUBLIC_APP_URL}/products/${params.slug}`,
+      url: `${process.env.NEXT_PUBLIC_APP_URL}/products/${slug}`,
     },
     twitter: {
       card: 'summary_large_image',
@@ -95,7 +96,7 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
       images: imageUrl ? [imageUrl] : [],
     },
     alternates: {
-      canonical: `${process.env.NEXT_PUBLIC_APP_URL}/products/${params.slug}`,
+      canonical: `${process.env.NEXT_PUBLIC_APP_URL}/products/${slug}`,
     },
   };
 }
@@ -110,7 +111,8 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
  * @returns Product detail page
  */
 export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
-  const product = await fetchProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await fetchProductBySlug(slug);
 
   // Handle product not found
   if (!product) {
@@ -134,7 +136,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   // Add current product
   breadcrumbItems.push({
     label: product.name,
-    href: `/products/${params.slug}`,
+    href: `/products/${slug}`,
     current: true,
   });
 
@@ -153,7 +155,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       availability: product.inventory.inStock
         ? 'https://schema.org/InStock'
         : 'https://schema.org/OutOfStock',
-      url: `${process.env.NEXT_PUBLIC_APP_URL}/products/${params.slug}`,
+      url: `${process.env.NEXT_PUBLIC_APP_URL}/products/${slug}`,
     },
     ...(product.reviews && product.reviews.totalReviews > 0
       ? {

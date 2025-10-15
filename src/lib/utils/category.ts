@@ -153,6 +153,8 @@ export async function getDescendantIds(categoryId: string): Promise<string[]> {
 /**
  * Gets the full path of a category (from root to current)
  *
+ * PERFORMANCE: Uses recursive CTE to fetch entire path in 1 query (was N+1)
+ *
  * @param categoryId - The category ID
  * @returns Promise<CategoryTreeNode[]> - Array of categories from root to current
  *
@@ -161,34 +163,57 @@ export async function getDescendantIds(categoryId: string): Promise<string[]> {
  * // Returns: [Electronics, Computers, Laptops]
  */
 export async function getCategoryPath(categoryId: string): Promise<CategoryTreeNode[]> {
-  const path: CategoryTreeNode[] = [];
-  let currentId: string | null = categoryId;
+  // Use recursive CTE to fetch entire path in a single query
+  // This eliminates the N+1 query problem (was 1 query per level)
+  const result = await prisma.$queryRaw<CategoryTreeNode[]>`
+    WITH RECURSIVE category_path AS (
+      -- Base case: start with the target category
+      SELECT
+        id,
+        name,
+        slug,
+        description,
+        "imageUrl",
+        "sortOrder",
+        "parentId",
+        "createdAt",
+        "updatedAt",
+        0 as depth
+      FROM "Category"
+      WHERE id = ${categoryId}
 
-  while (currentId) {
-    const category: CategoryTreeNode | null = await prisma.category.findUnique({
-      where: { id: currentId },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
-        imageUrl: true,
-        sortOrder: true,
-        parentId: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+      UNION ALL
 
-    if (!category) {
-      break;
-    }
+      -- Recursive case: join with parent categories
+      SELECT
+        c.id,
+        c.name,
+        c.slug,
+        c.description,
+        c."imageUrl",
+        c."sortOrder",
+        c."parentId",
+        c."createdAt",
+        c."updatedAt",
+        cp.depth + 1 as depth
+      FROM "Category" c
+      INNER JOIN category_path cp ON c.id = cp."parentId"
+    )
+    SELECT
+      id,
+      name,
+      slug,
+      description,
+      "imageUrl",
+      "sortOrder",
+      "parentId",
+      "createdAt",
+      "updatedAt"
+    FROM category_path
+    ORDER BY depth DESC
+  `;
 
-    path.unshift(category); // Add to beginning of array
-    currentId = category.parentId;
-  }
-
-  return path;
+  return result;
 }
 
 /**

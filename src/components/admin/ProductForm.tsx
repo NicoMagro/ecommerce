@@ -38,8 +38,17 @@ export function ProductForm({ product, onClose, onSuccess }: ProductFormProps) {
     sku: product?.sku || '',
     description: product?.description || '',
     shortDescription: product?.shortDescription || '',
-    price: product?.price || 0,
-    compareAtPrice: product?.compareAtPrice,
+    // Convert price from string (Prisma Decimal) to number
+    price: product?.price
+      ? typeof product.price === 'string'
+        ? parseFloat(product.price)
+        : product.price
+      : 0,
+    compareAtPrice: product?.compareAtPrice
+      ? typeof product.compareAtPrice === 'string'
+        ? parseFloat(product.compareAtPrice)
+        : product.compareAtPrice
+      : undefined,
     categoryId: product?.categoryId,
     status: product?.status || 'DRAFT',
     featured: product?.featured || false,
@@ -72,17 +81,37 @@ export function ProductForm({ product, onClose, onSuccess }: ProductFormProps) {
       const url = product ? `/api/admin/products/${product.id}` : '/api/admin/products';
       const method = product ? 'PATCH' : 'POST';
 
+      // Clean form data - remove empty strings and convert to null
+      const cleanedData = Object.entries(formData).reduce((acc, [key, value]) => {
+        // Convert empty strings to undefined (will be omitted in JSON)
+        if (value === '') {
+          return acc;
+        }
+        // Keep all other values including 0, false, null
+        acc[key as keyof ProductFormData] = value as ProductFormData[keyof ProductFormData];
+        return acc;
+      }, {} as Partial<ProductFormData>);
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(cleanedData),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to save product');
+        const errorData = await response.json();
+
+        // Show detailed error if available
+        if (errorData.details && Array.isArray(errorData.details)) {
+          const fieldErrors = errorData.details
+            .map((d: { field: string; message: string }) => `${d.field}: ${d.message}`)
+            .join(', ');
+          throw new Error(fieldErrors || errorData.message || 'Failed to save product');
+        }
+
+        throw new Error(errorData.message || 'Failed to save product');
       }
 
       onSuccess();

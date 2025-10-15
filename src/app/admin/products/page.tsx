@@ -17,8 +17,8 @@ interface Product {
   slug: string;
   description?: string;
   shortDescription?: string;
-  price: number;
-  compareAtPrice?: number;
+  price: number | string; // Prisma returns Decimal as string
+  compareAtPrice?: number | string; // Prisma returns Decimal as string
   categoryId?: string;
   status: string;
   featured: boolean;

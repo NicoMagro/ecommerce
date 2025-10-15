@@ -40,7 +40,9 @@ export const createProductSchema = z
       .refine(
         (val) => {
           // Ensure max 2 decimal places
-          return /^\d+(\.\d{1,2})?$/.test(val.toString());
+          // Round to 2 decimals and compare to check precision
+          const rounded = Math.round(val * 100) / 100;
+          return Math.abs(val - rounded) < 0.001; // Allow tiny floating point errors
         },
         {
           message: 'Price must have at most 2 decimal places',

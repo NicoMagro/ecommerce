@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Modern e-commerce platform with Next.js 15 App Router, TypeScript strict mode, Prisma ORM, and PostgreSQL. Follows a 12-sprint development plan with **Sprint 0 Complete** (foundation) and **Sprint 1 Next** (product catalog).
+Modern e-commerce platform with Next.js 15 App Router, TypeScript strict mode, Prisma ORM, and PostgreSQL. Follows a 12-sprint development plan with **Sprint 0 Complete** (foundation), **Sprint 1 Complete** (product catalog), and **Sprint 2 In Progress** (product details & categories).
 
 ## Common Commands
 
@@ -124,7 +124,7 @@ Key relationships:
 - **XSS Prevention**: React's built-in escaping + Content Security Policy headers
 - **CSRF Protection**: Built into Next.js API routes
 - **Security Headers**: Middleware adds HSTS, X-Frame-Options, CSP, etc.
-- **Rate Limiting**: To be implemented with Upstash Redis (Sprint 3+)
+- **Rate Limiting**: In-memory rate limiter implemented (200 req/15min for public APIs)
 
 ## Code Standards
 
@@ -323,13 +323,28 @@ This project has a comprehensive sub-agent system in `/context/` with domain-spe
 
 ## Current Sprint Status
 
-**✅ Sprint 0 Complete** - Foundation setup with auth, database, CI/CD
+**✅ Sprint 0 Complete** - Foundation & Infrastructure Setup
 
-**🔄 Sprint 1 Next** - Core Product Catalog
+- Next.js 15, TypeScript strict mode, Prisma, PostgreSQL
+- NextAuth.js v5 with security (bcrypt, account lockout)
+- CI/CD pipeline (GitHub Actions)
+- Monitoring (Sentry), code quality tools (ESLint, Prettier, Husky)
 
-- Admin CRUD for products
-- Public product listing with pagination
-- Product card component
-- Cloudinary image upload integration
+**✅ Sprint 1 Complete** - Core Product Catalog
+
+- ✅ US-1.1: Admin product CRUD operations
+- ✅ US-1.2: Public product API with pagination/filtering
+- ✅ US-1.3: ProductCard component (responsive, accessible)
+- ✅ US-1.4: Cloudinary integration for image management
+- ✅ US-1.5: Public product listing page
+- ✅ US-1.6: Admin products dashboard
+
+**🔄 Sprint 2 In Progress** - Product Details & Categories
+
+- ✅ US-2.1: Admin category management (hierarchical categories, CRUD)
+- ✅ US-2.2: Product detail page with image gallery
+- ✅ US-2.3: Browse products by category (breadcrumbs, category menu, filtering)
+- ✅ Performance fixes: N+1 query optimization, composite indexes, rate limiting
+- ⏳ US-2.4: Advanced filtering on product listing (planned)
 
 See `docs/SPRINT_PLAN.md` for complete roadmap and detailed user stories.

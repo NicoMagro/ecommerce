@@ -71,6 +71,8 @@ model Category {
 
   @@index([slug])
   @@index([parentId])
+  // Composite index for hierarchy queries (sorting + filtering by parent)
+  @@index([parentId, sortOrder])
   @@map("categories")
 }
 
@@ -104,6 +106,10 @@ model Product {
   @@index([slug])
   @@index([status])
   @@index([categoryId])
+  // Composite indexes for common query patterns
+  @@index([categoryId, status, featured]) // Category page filtering
+  @@index([status, featured])             // Homepage featured products
+  @@index([status, deletedAt])            // Active products filtering
   @@map("products")
 }
 
