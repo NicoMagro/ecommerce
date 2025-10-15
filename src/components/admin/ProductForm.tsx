@@ -26,8 +26,26 @@ interface ProductFormData {
   seoDescription?: string;
 }
 
+/**
+ * Product data from API (Prisma returns Decimal as string)
+ */
+interface ProductFormInput {
+  id: string;
+  name: string;
+  sku: string;
+  description: string;
+  shortDescription: string;
+  price: number | string; // Prisma Decimal can be string
+  compareAtPrice?: number | string; // Prisma Decimal can be string
+  categoryId?: string;
+  status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
+  featured: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
+}
+
 interface ProductFormProps {
-  product?: ProductFormData & { id: string };
+  product?: ProductFormInput;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -81,16 +99,16 @@ export function ProductForm({ product, onClose, onSuccess }: ProductFormProps) {
       const url = product ? `/api/admin/products/${product.id}` : '/api/admin/products';
       const method = product ? 'PATCH' : 'POST';
 
-      // Clean form data - remove empty strings and convert to null
-      const cleanedData = Object.entries(formData).reduce((acc, [key, value]) => {
-        // Convert empty strings to undefined (will be omitted in JSON)
-        if (value === '') {
-          return acc;
+      // Clean form data - remove empty strings (will be omitted in JSON)
+      const cleanedData: Partial<ProductFormData> = {};
+
+      (Object.keys(formData) as Array<keyof ProductFormData>).forEach((key) => {
+        const value = formData[key];
+        if (value !== '') {
+          // Type assertion needed because TypeScript can't narrow union types in indexed access
+          cleanedData[key] = value as never;
         }
-        // Keep all other values including 0, false, null
-        acc[key as keyof ProductFormData] = value as ProductFormData[keyof ProductFormData];
-        return acc;
-      }, {} as Partial<ProductFormData>);
+      });
 
       const response = await fetch(url, {
         method,
